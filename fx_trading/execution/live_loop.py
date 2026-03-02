@@ -9,6 +9,7 @@
 #   - Check heartbeat on every bar
 #   - All signals go through RiskEngine before reaching BrokerAdapter
 #   - NaN in features = ABSTAIN, always
+#   - Take-profit is set server-side at the broker — we do not manage it locally
 
 import logging
 import time
@@ -29,6 +30,10 @@ HEARTBEAT_INTERVAL_SECONDS = 30
 STALE_TICK_THRESHOLD_SECONDS = 30
 BAR_COMPLETION_TIMEOUT_SECONDS = 330   # 5m bar + 30s grace
 
+# MT5 timeframe constant — avoids importing MT5 at module level
+# If you change timeframe, update this AND timeframe_sec in __init__
+MT5_TIMEFRAME_M5 = 16388   # mt5.TIMEFRAME_M5 numeric value
+
 
 class LiveExecutionLoop:
     """
@@ -40,41 +45,50 @@ class LiveExecutionLoop:
 
     def __init__(
         self,
-        adapter,            # BrokerAdapter
-        submitter,          # IdempotentOrderSubmitter
-        pipeline,           # FeaturePipeline
-        model,              # trained model object
+        adapter,                    # BrokerAdapter
+        submitter,                  # IdempotentOrderSubmitter
+        pipeline,                   # FeaturePipeline
+        model,                      # trained model object
         model_sha256: str,
         pipeline_sha256: str,
         model_version: str,
-        risk_engine,        # RiskEngine
-        state_store,        # StateStore
+        risk_engine,                # RiskEngine
+        state_store,                # StateStore
         pairs: list[Pair],
+        broker_tz_str: str,         # e.g. "Etc/GMT-2" — your broker's server timezone
         timeframe_sec: int = 300,   # 5m bars
         lookback_bars: int = 110,   # pipeline.config.rolling_window_bars + buffer
     ):
-        self._adapter = adapter
-        self._submitter = submitter
-        self._pipeline = pipeline
-        self._model = model
-        self._model_sha256 = model_sha256
+        self._adapter        = adapter
+        self._submitter      = submitter
+        self._pipeline       = pipeline
+        self._model          = model
+        self._model_sha256   = model_sha256
         self._pipeline_sha256 = pipeline_sha256
-        self._model_version = model_version
-        self._risk = risk_engine
-        self._state = state_store
-        self._pairs = pairs
-        self._timeframe_sec = timeframe_sec
-        self._lookback_bars = lookback_bars
-        self._bar_buffer: dict[Pair, list] = {p: [] for p in pairs}
+        self._model_version  = model_version
+        self._risk           = risk_engine
+        self._state          = state_store
+        self._pairs          = pairs
+        self._broker_tz_str  = broker_tz_str
+        self._timeframe_sec  = timeframe_sec
+        self._lookback_bars  = lookback_bars
+
         self._last_heartbeat_check = now_utc()
-        self._last_tick_time: dict[Pair, datetime] = {}
+        self._last_signal_bar: dict[Pair, datetime] = {}   # tracks last bar we acted on
+
+    # ------------------------------------------------------------------
+    # Entry point
+    # ------------------------------------------------------------------
 
     def run(self, model_sha256: str, pipeline_sha256: str) -> None:
         """
         Entry point. Runs reconciliation, then enters the bar loop.
         Exits on kill switch or unrecoverable error.
         """
-        logger.info("Starting live execution loop", extra={"pairs": [p.value for p in self._pairs]})
+        logger.info(
+            "Starting live execution loop",
+            extra={"pairs": [p.value for p in self._pairs], "model": self._model_version}
+        )
 
         # ---- Startup reconciliation (mandatory) ----
         recon_result = run_reconciliation(
@@ -108,22 +122,27 @@ class LiveExecutionLoop:
             except KeyboardInterrupt:
                 logger.info("KeyboardInterrupt received. Shutting down cleanly.")
                 break
+            except SystemExit:
+                logger.critical("Kill switch triggered SystemExit. Halting.")
+                break
             except Exception as exc:
                 logger.critical(
                     "Unhandled exception in execution loop",
                     extra={"error": str(exc), "type": type(exc).__name__}
                 )
-                # Don't exit on transient errors — log and continue
-                # but check if kill switch was set by circuit breaker
                 if self._state.get_kill_switch():
                     logger.critical("Kill switch active after exception. Exiting.")
                     break
                 time.sleep(5)
 
+    # ------------------------------------------------------------------
+    # Per-iteration logic
+    # ------------------------------------------------------------------
+
     def _iteration(self) -> None:
         """
         Single iteration of the execution loop.
-        Called on each tick or polling interval.
+        Called on a 1-second polling interval.
         """
         now = now_utc()
 
@@ -137,21 +156,27 @@ class LiveExecutionLoop:
             logger.critical("Kill switch active. Loop halted.")
             raise SystemExit("Kill switch")
 
-        # ---- Poll for new complete bars ----
+        # ---- Market closed → sleep ----
+        if not is_market_open(now):
+            time.sleep(60)
+            return
+
+        # ---- Process each pair ----
         for pair in self._pairs:
             self._process_pair(pair, now)
 
         time.sleep(1)   # polling interval: 1 second
+
+    # ------------------------------------------------------------------
+    # Per-pair signal + order logic
+    # ------------------------------------------------------------------
 
     def _process_pair(self, pair: Pair, now: datetime) -> None:
         """
         Check if a new complete bar is available for this pair.
         If yes: compute features, get signal, evaluate risk, potentially trade.
         """
-        if not is_market_open(now):
-            return
-
-        # Fetch latest bars from broker (last lookback_bars of complete bars)
+        # ---- Fetch bars ----
         try:
             bars = self._fetch_recent_bars(pair, n=self._lookback_bars + 2)
         except Exception as exc:
@@ -168,16 +193,28 @@ class LiveExecutionLoop:
             )
             return
 
-        # Only process complete bars
+        # ---- Only use complete bars ----
         complete_bars = [b for b in bars if b.is_complete]
         if not complete_bars:
             return
 
-        # Convert to DataFrame
+        last_bar = complete_bars[-1]
+
+        # ---- Deduplicate: have we already processed this bar? ----
+        prev_bar_time = self._last_signal_bar.get(pair)
+        if prev_bar_time is not None and last_bar.utc_open <= prev_bar_time:
+            return   # same bar, nothing new
+        self._last_signal_bar[pair] = last_bar.utc_open
+
+        logger.debug(
+            "New complete bar",
+            extra={"pair": pair.value, "bar_open": format_utc(last_bar.utc_open)}
+        )
+
+        # ---- Convert to DataFrame ----
         from data.aggregation import bars_to_dataframe
         df = bars_to_dataframe(complete_bars)
 
-        # Validate no all-NaN columns
         if df.isnull().all().any():
             logger.error("All-NaN column in bar data — skipping", extra={"pair": pair.value})
             return
@@ -195,21 +232,20 @@ class LiveExecutionLoop:
         if features.empty:
             return
 
-        # Get the last complete row (current signal bar)
         feature_row = features.iloc[[-1]]
 
         # Guard: NaN in features → ABSTAIN
         if feature_row.isnull().any().any():
+            nan_cols = list(feature_row.columns[feature_row.isnull().any()])
             logger.warning(
                 "NaN in feature row — abstaining",
-                extra={"pair": pair.value, "nan_cols": feature_row.columns[feature_row.isnull().any()].tolist()}
+                extra={"pair": pair.value, "nan_cols": nan_cols}
             )
             return
 
         # ---- Model inference ----
         try:
-            proba = predict_proba(self._model, feature_row, "lightgbm")
-            signal, confidence = compute_signal(proba[0])
+            proba = predict_proba(self._model, feature_row)
         except Exception as exc:
             logger.error(
                 "Model inference error",
@@ -217,98 +253,157 @@ class LiveExecutionLoop:
             )
             return
 
-        # Log signal (even ABSTAIN — important for monitoring)
-        self._state.set_last_bar_utc(df.index[-1].to_pydatetime())
-        logger.info(
-            "signal_generated",
-            extra={
-                "pair": pair.value,
-                "signal": signal,
-                "confidence": round(confidence, 4),
-                "bar_utc": format_utc(df.index[-1].to_pydatetime()),
-                "model_version": self._model_version,
-            }
-        )
+        direction, confidence = compute_signal(proba, min_confidence=0.55, min_margin=0.10)
 
-        if signal == 0:
+        if direction == 0:
+            logger.info(
+                "ABSTAIN",
+                extra={
+                    "pair": pair.value,
+                    "bar_open": format_utc(last_bar.utc_open),
+                    "p_long": round(proba[2], 3),
+                    "p_short": round(proba[0], 3),
+                    "p_abstain": round(proba[1], 3),
+                }
+            )
             return
 
-        # ---- Risk evaluation ----
+        # ---- Get current prices ----
         try:
             bid, ask = self._adapter.get_price(pair)
         except Exception as exc:
-            logger.error("Failed to get price", extra={"pair": pair.value, "error": str(exc)})
+            logger.error(
+                "Failed to get price",
+                extra={"pair": pair.value, "error": str(exc)}
+            )
             return
 
+        # ---- Get account state ----
         try:
             account = self._adapter.get_account_state()
         except Exception as exc:
             logger.error("Failed to get account state", extra={"error": str(exc)})
             return
 
-        # Check drawdown circuit breaker
-        if self._risk.check_drawdown_circuit_breaker(float(account.equity_usd)):
-            return  # kill switch set inside check_drawdown_circuit_breaker
+        # ---- ATR from features (pre-shifted, so no look-ahead) ----
+        atr_col = [c for c in feature_row.columns if "atr" in c.lower()]
+        if atr_col:
+            atr_pips = float(feature_row[atr_col[0]].iloc[0])
+        else:
+            # Fallback: approximate from last bar range
+            atr_pips = float((last_bar.high_bid - last_bar.low_bid) / Decimal("0.0001"))
 
+        # ---- Risk evaluation ----
         open_positions = self._state.get_open_positions()
-        today = now_utc().date().isoformat()
-        daily_pnl = self._state.get_daily_pnl(today)
+        daily_pnl = self._state.get_daily_pnl(now_utc().strftime("%Y-%m-%d"))
 
-        # Get ATR in pips from features
-        atr_pct = float(feature_row["atr_pct"].iloc[0]) if "atr_pct" in feature_row.columns else 0
-        from shared.schemas import pip_multiplier
-        atr_pips = atr_pct * float(ask) * pip_multiplier(pair)
-
-        decision = self._risk.evaluate(
-            signal=signal,
-            confidence=confidence,
-            pair=pair,
-            current_bid=bid,
-            current_ask=ask,
-            atr_pips=atr_pips,
-            equity_usd=float(account.equity_usd),
-            open_positions=open_positions,
-            daily_pnl_usd=daily_pnl,
-        )
+        try:
+            decision = self._risk.evaluate(
+                signal=direction,
+                confidence=confidence,
+                pair=pair,
+                current_bid=bid,
+                current_ask=ask,
+                atr_pips=atr_pips,
+                equity_usd=float(account.equity_usd),
+                open_positions=open_positions,
+                daily_pnl_usd=daily_pnl,
+            )
+        except Exception as exc:
+            logger.error("Risk engine error", extra={"error": str(exc)})
+            return
 
         if not decision.trade_permitted:
             logger.info(
-                "Trade blocked by risk engine",
+                "Trade denied by risk engine",
                 extra={"pair": pair.value, "reason": decision.reason}
             )
             return
 
         # ---- Build and submit order ----
+        side = Side.BUY if direction == 1 else Side.SELL
+
         order = Order(
             pair=pair,
-            side=Side.BUY if signal == 1 else Side.SELL,
+            side=side,
             order_type=OrderType.MARKET,
             units=decision.position_size_units,
             stop_loss_price=decision.stop_price,
+            take_profit_price=decision.take_profit_price,  # set server-side at broker
+            model_version=self._model_version,
+            signal_confidence=confidence,
         )
 
-        result = self._submitter.submit(order, signal_confidence=confidence)
-
         logger.info(
-            "order_submitted",
+            "Submitting order",
             extra={
-                "client_order_id": result.client_order_id,
-                "broker_order_id": result.broker_order_id,
-                "status": result.status.value,
                 "pair": pair.value,
+                "side": side.value,
                 "units": decision.position_size_units,
-                "stop_loss": float(decision.stop_price),
+                "stop_price": float(decision.stop_price),
+                "take_profit_price": float(decision.take_profit_price) if decision.take_profit_price else None,
+                "confidence": round(confidence, 3),
+                "bar_open": format_utc(last_bar.utc_open),
             }
         )
 
-        # Increment bar count for cooldown tracking
-        self._state.increment_bar_count()
-        self._state.update_high_water_mark(float(account.equity_usd))
+        try:
+            result = self._submitter.submit(order)
+        except Exception as exc:
+            logger.critical(
+                "Order submission failed",
+                extra={"pair": pair.value, "error": str(exc), "client_order_id": order.client_order_id}
+            )
+            return
+
+        if result.status.value in ("FILLED", "PARTIALLY_FILLED"):
+            logger.info(
+                "Order filled",
+                extra={
+                    "pair": pair.value,
+                    "broker_order_id": result.broker_order_id,
+                    "filled_price": float(result.filled_price) if result.filled_price else None,
+                    "units": order.units,
+                }
+            )
+        elif result.status.value == "REJECTED":
+            logger.error(
+                "Order rejected by broker",
+                extra={"pair": pair.value, "reason": result.rejection_reason}
+            )
+        elif result.status.value == "DEAD_LETTERED":
+            logger.critical(
+                "Order dead-lettered after retries",
+                extra={"pair": pair.value, "client_order_id": order.client_order_id}
+            )
+
+    # ------------------------------------------------------------------
+    # Bar fetching — concrete MT5 implementation
+    # ------------------------------------------------------------------
+
+    def _fetch_recent_bars(self, pair: Pair, n: int) -> list:
+        """
+        Fetch recent bars from MT5 using data/ingestion.py.
+        Returns list of OHLCVBar sorted ascending by utc_open.
+        """
+        from data.ingestion import fetch_recent_bars_mt5
+
+        return fetch_recent_bars_mt5(
+            pair=pair,
+            n=n,
+            timeframe_mt5=MT5_TIMEFRAME_M5,
+            timeframe_sec=self._timeframe_sec,
+            broker_tz_str=self._broker_tz_str,
+        )
+
+    # ------------------------------------------------------------------
+    # Heartbeat
+    # ------------------------------------------------------------------
 
     def _run_heartbeat(self, now: datetime) -> None:
         """
-        Heartbeat checks. Runs every HEARTBEAT_INTERVAL_SECONDS.
-        Triggers kill switch if too many consecutive failures.
+        Runs every HEARTBEAT_INTERVAL_SECONDS.
+        Triggers kill switch if all checks fail.
         """
         checks_passed = 0
         total_checks = 4
@@ -319,7 +414,7 @@ class LiveExecutionLoop:
         else:
             logger.error("Heartbeat: broker not connected")
 
-        # Check 2: Account state fetchable
+        # Check 2: Account state fetchable and fresh
         try:
             account = self._adapter.get_account_state()
             age = (now - account.as_of_utc).total_seconds()
@@ -337,19 +432,16 @@ class LiveExecutionLoop:
         except Exception as exc:
             logger.critical("Heartbeat: DB write failed", extra={"error": str(exc)})
 
-        # Check 4: Position count consistent
+        # Check 4: Position count consistent between broker and local DB
         try:
             broker_positions = self._adapter.get_open_positions()
-            local_positions = self._state.get_open_positions()
+            local_positions  = self._state.get_open_positions()
             if len(broker_positions) == len(local_positions):
                 checks_passed += 1
             else:
                 logger.warning(
                     "Heartbeat: position count mismatch",
-                    extra={
-                        "broker": len(broker_positions),
-                        "local": len(local_positions),
-                    }
+                    extra={"broker": len(broker_positions), "local": len(local_positions)}
                 )
         except Exception as exc:
             logger.error("Heartbeat: position check failed", extra={"error": str(exc)})
@@ -364,22 +456,6 @@ class LiveExecutionLoop:
             }
         )
 
-        # If all checks fail repeatedly, trigger kill switch
         if checks_passed == 0:
             logger.critical("All heartbeat checks failed — triggering kill switch")
             self._state.set_kill_switch(True, reason="All heartbeat checks failed")
-
-    def _fetch_recent_bars(self, pair: Pair, n: int) -> list:
-        """
-        Fetch recent bars from broker. Pair-specific implementation.
-        In a real system this calls MT5.copy_rates_from_pos() or OANDA candles endpoint.
-        Returns list of OHLCVBar.
-
-        This is a stub — implement broker-specific bar fetching in data/ingestion.py
-        and call it from here.
-        """
-        # Placeholder — replace with actual implementation
-        raise NotImplementedError(
-            "Implement _fetch_recent_bars using data/ingestion.py. "
-            "See data layer specification for MT5/OANDA bar fetching."
-        )

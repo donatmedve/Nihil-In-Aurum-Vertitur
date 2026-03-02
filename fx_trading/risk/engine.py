@@ -4,6 +4,10 @@
 #
 # Call evaluate() before EVERY order submission.
 # Call update_after_close() after EVERY position close.
+#
+# Changes vs original:
+#   - take_profit_price added to RiskDecision output (1.5× ATR, matching label construction)
+#   - RiskParameters.tp_atr_multiplier added (default 1.5)
 
 import logging
 from dataclasses import dataclass
@@ -35,8 +39,13 @@ class RiskParameters:
     # Correlated exposure cap (EUR/USD + GBP/USD both long USD)
     max_correlated_usd_exposure: float = 10_000.0   # in USD notional
 
-    # SL buffer: add half-spread to stop to avoid triggering on noise
+    # Stop loss: 1.0× ATR + half-spread buffer
+    sl_atr_multiplier: float = 1.0
     sl_spread_buffer_ratio: float = 0.5
+
+    # Take profit: 1.5× ATR (matches label construction — same reward:risk ratio)
+    # Increase to 2.0 for a wider target; decrease to 1.0 for faster exits.
+    tp_atr_multiplier: float = 1.5
 
     # Sizing floors
     min_units: int = 1_000      # micro lot minimum
@@ -84,6 +93,7 @@ class RiskEngine:
                 position_size_units=0,
                 stop_distance_pips=0.0,
                 stop_price=Decimal("0"),
+                take_profit_price=None,
                 max_loss_usd=0.0,
             )
 
@@ -116,35 +126,39 @@ class RiskEngine:
             if bars_since < self.params.cooldown_bars:
                 return deny(
                     f"Consecutive loss cooldown: {consec} losses, "
-                    f"waiting {self.params.cooldown_bars - bars_since} more bars"
+                    f"{self.params.cooldown_bars - bars_since} bars remaining"
                 )
             else:
                 self._state.reset_consecutive_losses()
-                logger.info("Consecutive loss cooldown expired, resuming")
 
-        # ---- Market quality filter 1: ATR ----
+        # ---- Circuit breaker 6: ATR too small ----
         if atr_pips < self.params.min_atr_pips:
-            return deny(f"ATR too small: {atr_pips:.1f} pips < {self.params.min_atr_pips}")
+            return deny(f"ATR too small: {atr_pips:.1f} pips < {self.params.min_atr_pips:.1f} pips")
 
-        # ---- Market quality filter 2: Spread/ATR ratio ----
-        spread_pips = float(current_ask - current_bid) * pip_multiplier(pair)
-        if atr_pips > 0 and (spread_pips / atr_pips) > self.params.max_spread_to_atr_ratio:
+        # ---- Circuit breaker 7: Spread/ATR ratio too high ----
+        spread_pips = float((current_ask - current_bid) / pip_size(pair))
+        spread_atr_ratio = spread_pips / atr_pips if atr_pips > 0 else 999.0
+        if spread_atr_ratio > self.params.max_spread_to_atr_ratio:
             return deny(
-                f"Spread/ATR ratio too high: {spread_pips:.1f}/{atr_pips:.1f} = "
-                f"{spread_pips/atr_pips:.2f} > {self.params.max_spread_to_atr_ratio}"
+                f"Spread/ATR too high: {spread_atr_ratio:.2f} > {self.params.max_spread_to_atr_ratio:.2f}"
             )
 
-        # ---- Correlated exposure check ----
+        # ---- Circuit breaker 8: Correlated USD exposure ----
         if pair in (Pair.EURUSD, Pair.GBPUSD):
-            exposure = self._compute_usd_exposure(open_positions, [Pair.EURUSD, Pair.GBPUSD])
-            if exposure >= self.params.max_correlated_usd_exposure:
+            desired_side = Side.BUY if signal == 1 else Side.SELL
+            correlated_pairs = [Pair.EURUSD, Pair.GBPUSD]
+            correlated_usd_exposure = sum(
+                p.units * float(p.entry_price) * (1 if p.side == desired_side else -1)
+                for p in open_positions
+                if p.pair in correlated_pairs and p.side == desired_side
+            )
+            if correlated_usd_exposure >= self.params.max_correlated_usd_exposure:
                 return deny(
-                    f"Correlated USD exposure cap: ${exposure:,.0f} >= "
+                    f"Correlated USD exposure cap: ${correlated_usd_exposure:,.0f} >= "
                     f"${self.params.max_correlated_usd_exposure:,.0f}"
                 )
 
         # ---- Direction conflict check ----
-        # Don't open same pair in same direction if already open
         same_pair_positions = [p for p in open_positions if p.pair == pair]
         desired_side = Side.BUY if signal == 1 else Side.SELL
         for existing in same_pair_positions:
@@ -158,9 +172,11 @@ class RiskEngine:
         confidence_scalar = max(0.55, min(1.0, confidence))
         risk_usd_adjusted = risk_usd * confidence_scalar
 
-        # Stop distance = 1× ATR + half-spread buffer (keeps stop outside spread)
-        sl_atr_mult = 1.0
-        stop_distance_pips = (atr_pips * sl_atr_mult) + (spread_pips * self.params.sl_spread_buffer_ratio)
+        # Stop distance = SL_ATR_MULT × ATR + half-spread buffer
+        stop_distance_pips = (
+            atr_pips * self.params.sl_atr_multiplier
+            + spread_pips * self.params.sl_spread_buffer_ratio
+        )
 
         # Pip value in USD per unit
         pip_val_per_unit = _pip_value_per_unit_usd(pair, current_bid)
@@ -171,22 +187,40 @@ class RiskEngine:
         units = int(risk_usd_adjusted / (stop_distance_pips * pip_val_per_unit))
         units = max(self.params.min_units, min(self.params.max_units, units))
 
-        # Stop price (placed outside spread, on the correct side)
+        # ---- Stop price ----
         pip_sz = float(pip_size(pair))
         stop_distance_price = stop_distance_pips * pip_sz
 
         if signal == 1:   # LONG: entry at ask, stop below bid
             entry_price = current_ask
-            stop_price = entry_price - Decimal(str(round(stop_distance_price, 5)))
+            stop_price  = entry_price - Decimal(str(round(stop_distance_price, 5)))
         else:             # SHORT: entry at bid, stop above ask
             entry_price = current_bid
-            stop_price = entry_price + Decimal(str(round(stop_distance_price, 5)))
+            stop_price  = entry_price + Decimal(str(round(stop_distance_price, 5)))
 
+        # ---- Take-profit price ----
+        # TP distance = TP_ATR_MULT × ATR (no spread buffer — TP benefits from spread narrowing)
+        # This matches the label construction (tp_atr_multiplier=1.5, sl_atr_multiplier=1.0)
+        # so the live system's exits mirror what the model was trained to predict.
+        tp_distance_pips  = atr_pips * self.params.tp_atr_multiplier
+        tp_distance_price = tp_distance_pips * pip_sz
+
+        if signal == 1:   # LONG: TP above entry
+            take_profit_price = entry_price + Decimal(str(round(tp_distance_price, 5)))
+        else:             # SHORT: TP below entry
+            take_profit_price = entry_price - Decimal(str(round(tp_distance_price, 5)))
+
+        # ---- Final decision ----
         max_loss_usd = units * stop_distance_pips * pip_val_per_unit
+        rr_ratio = tp_distance_pips / stop_distance_pips
 
         reason = (
-            f"Approved: {units:,} units, SL {stop_distance_pips:.1f} pips, "
-            f"max_loss ${max_loss_usd:.2f}, confidence {confidence:.1%}"
+            f"Approved: {units:,} units | "
+            f"SL {stop_distance_pips:.1f} pips @ {float(stop_price):.5f} | "
+            f"TP {tp_distance_pips:.1f} pips @ {float(take_profit_price):.5f} | "
+            f"R:R {rr_ratio:.2f} | "
+            f"max_loss ${max_loss_usd:.2f} | "
+            f"confidence {confidence:.1%}"
         )
 
         logger.info(
@@ -197,6 +231,9 @@ class RiskEngine:
                 "units": units,
                 "stop_distance_pips": stop_distance_pips,
                 "stop_price": float(stop_price),
+                "tp_distance_pips": tp_distance_pips,
+                "take_profit_price": float(take_profit_price),
+                "rr_ratio": round(rr_ratio, 2),
                 "max_loss_usd": max_loss_usd,
                 "confidence": confidence,
                 "equity_usd": equity_usd,
@@ -209,6 +246,7 @@ class RiskEngine:
             position_size_units=units,
             stop_distance_pips=stop_distance_pips,
             stop_price=stop_price,
+            take_profit_price=take_profit_price,
             max_loss_usd=max_loss_usd,
         )
 
@@ -237,45 +275,39 @@ class RiskEngine:
         """
         Returns True if the peak-to-trough drawdown exceeds the daily limit.
         Call on every bar during the execution loop.
+        If True, the caller must set the kill switch and halt.
         """
-        dd = self._state.get_drawdown_from_peak(equity_usd)
-        if dd >= self.params.max_daily_drawdown_pct:
+        self._state.update_high_water_mark(equity_usd)
+        drawdown = self._state.get_drawdown_from_peak(equity_usd)
+        if drawdown >= self.params.max_daily_drawdown_pct:
             logger.critical(
                 "Drawdown circuit breaker triggered",
-                extra={
-                    "drawdown_pct": f"{dd:.2%}",
-                    "threshold_pct": f"{self.params.max_daily_drawdown_pct:.2%}",
-                    "equity_usd": equity_usd,
-                    "high_water_mark": self._state.get_high_water_mark(),
-                }
+                extra={"drawdown": f"{drawdown:.2%}", "equity_usd": equity_usd}
             )
-            self._state.set_kill_switch(True, reason=f"Drawdown {dd:.2%} exceeded threshold")
+            self._state.set_kill_switch(True, reason=f"Drawdown circuit breaker: {drawdown:.2%}")
             return True
         return False
 
-    def _compute_usd_exposure(
-        self, positions: list[Position], pairs: list[Pair]
-    ) -> float:
-        """Compute total USD notional exposure for a set of pairs."""
-        total = 0.0
-        for pos in positions:
-            if pos.pair in pairs:
-                pip_val = _pip_value_per_unit_usd(pos.pair, pos.entry_price)
-                # Notional = units × price (for USD-quoted pairs)
-                notional = pos.units * float(pos.entry_price)
-                total += notional
-        return total
 
+# ------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------
 
-def _pip_value_per_unit_usd(pair: Pair, price: Decimal) -> float:
+def _pip_value_per_unit_usd(pair: Pair, current_price: Decimal) -> float:
     """
-    USD value of a 1-pip move for 1 unit of the base currency.
+    USD value of 1 pip for 1 unit of the base currency.
 
-    EUR/USD: 1 unit = 1 EUR. 1 pip = 0.0001 USD. pip_value = $0.0001
-    GBP/USD: same structure. pip_value = $0.0001
-    USD/JPY: 1 unit = 1 USD. 1 pip = 0.01 JPY. pip_value = 0.01 / price_USDJPY USD
+    EUR/USD: 1 pip = 0.0001 USD per unit → $0.0001
+    GBP/USD: 1 pip = 0.0001 USD per unit → $0.0001
+    USD/JPY: 1 pip = 0.01 JPY per unit → 0.01 / current_price USD per unit
+
+    This is used for position sizing: units = risk_usd / (stop_pips × pip_value).
     """
-    price_f = float(price)
     if pair == Pair.USDJPY:
-        return 0.01 / price_f if price_f > 0 else 0.0
-    return 0.0001   # EUR/USD, GBP/USD
+        # USD/JPY quote currency is JPY; convert pip value to USD
+        if current_price == 0:
+            return 0.0
+        return float(Decimal("0.01") / current_price)
+    else:
+        # EUR/USD and GBP/USD quote currency is already USD
+        return 0.0001

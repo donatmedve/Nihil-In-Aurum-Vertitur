@@ -280,6 +280,7 @@ class RiskDecision:
     position_size_units: int = 0
     stop_distance_pips: float = 0.0
     stop_price: Decimal = Decimal("0")
+    take_profit_price: Optional[Decimal] = None
     max_loss_usd: float = 0.0
 
 
