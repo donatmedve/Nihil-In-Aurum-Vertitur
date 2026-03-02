@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FX SYSTEM · CONTROL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ░░ OFFLINE BANNER ░░ -->
+  <div id="offline-banner" class="offline-banner hidden">
+    ⚠ BACKEND OFFLINE — SET YOUR API URL IN <code>app.js</code> → <strong>API_BASE</strong>
+  </div>
+
+  <!-- ░░ HEADER ░░ -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">
+        <span class="lm-inner"></span>
+      </div>
+      <div class="logo-copy">
+        <div class="logo-title">FX SYSTEM</div>
+        <div class="logo-sub">ML EXECUTION ENGINE · EUR/USD · GBP/USD · USD/JPY</div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="ticker" id="ticker-eurusd">
+        <span class="t-pair">EUR/USD</span>
+        <span class="t-price" id="p-eurusd">—.—</span>
+      </div>
+      <div class="ticker" id="ticker-gbpusd">
+        <span class="t-pair">GBP/USD</span>
+        <span class="t-price" id="p-gbpusd">—.—</span>
+      </div>
+      <div class="ticker" id="ticker-usdjpy">
+        <span class="t-pair">USD/JPY</span>
+        <span class="t-price" id="p-usdjpy">—.—</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="sys-status">
+        <div class="status-ring" id="status-ring"></div>
+        <span id="status-label">CONNECTING</span>
+      </div>
+      <div id="ks-badge" class="ks-badge hidden">KILL SWITCH</div>
+      <div class="utc-clock" id="clock">00:00:00 UTC</div>
+    </div>
+  </header>
+
+  <!-- ░░ KPI STRIP ░░ -->
+  <section class="kpi-strip">
+    <div class="kpi" id="kpi-equity">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">EQUITY</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-pnl">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">TODAY P&amp;L</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-hwm">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">HIGH WATER MARK</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-drawdown">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">DRAWDOWN</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-positions">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">OPEN POSITIONS</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-orders">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">ORDERS TODAY</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-win">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">WIN RATE</div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi" id="kpi-hb">
+      <div class="kpi-val">—</div>
+      <div class="kpi-label">LAST HEARTBEAT</div>
+    </div>
+  </section>
+
+  <!-- ░░ MAIN LAYOUT ░░ -->
+  <main class="workspace">
+
+    <!-- COL A: Positions + Chart -->
+    <div class="col col-a">
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">OPEN POSITIONS</span>
+          <span class="badge" id="pos-badge">0</span>
+        </div>
+        <div class="card-body" id="positions-wrap">
+          <div class="empty-state">NO OPEN POSITIONS</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">DAILY P&amp;L  <span class="card-sub">30 DAYS</span></span>
+        </div>
+        <div class="card-body chart-card">
+          <canvas id="pnl-chart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COL B: Orders -->
+    <div class="col col-b">
+      <div class="card full-height">
+        <div class="card-head">
+          <span class="card-title">ORDER HISTORY</span>
+          <span class="badge" id="ord-badge">0</span>
+        </div>
+        <div class="card-body no-pad">
+          <div class="tbl-scroll">
+            <table class="data-table" id="orders-table">
+              <thead>
+                <tr>
+                  <th>TIME</th>
+                  <th>PAIR</th>
+                  <th>SIDE</th>
+                  <th>UNITS</th>
+                  <th>ENTRY</th>
+                  <th>SL</th>
+                  <th>CONF</th>
+                  <th>MODEL</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody">
+                <tr><td colspan="9" class="empty-state">AWAITING DATA</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL C: AI Feed -->
+    <div class="col col-c">
+      <div class="card full-height">
+        <div class="card-head">
+          <span class="card-title">AI DECISIONS</span>
+          <div class="head-right">
+            <span class="badge" id="sig-badge">0</span>
+            <div class="refresh-dot" id="refresh-dot"></div>
+          </div>
+        </div>
+        <div class="ai-feed" id="ai-feed">
+          <div class="empty-state" style="padding:40px 0">WAITING FOR SIGNALS</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
