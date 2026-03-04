@@ -43,7 +43,12 @@ def load_histdata_csvs(raw_dir: str) -> pd.DataFrame:
 
 def parse_and_resample(df: pd.DataFrame) -> pd.DataFrame:
     # Parse datetime — format is "20130102 170100"
-    df["utc_open"] = pd.to_datetime(df["datetime"], format="%Y%m%d %H%M%S", utc=True)
+    df["utc_open"] = (
+    pd.to_datetime(df["datetime"], format="%Y%m%d %H%M%S")
+    .dt.tz_localize("America/New_York", ambiguous="NaT", nonexistent="NaT")
+    .dt.tz_convert("UTC")
+    )
+    df = df.dropna(subset=["utc_open"])  # drop ambiguous DST rows
     df = df.set_index("utc_open").sort_index()
     df = df[["open", "high", "low", "close", "volume"]].astype(float)
 

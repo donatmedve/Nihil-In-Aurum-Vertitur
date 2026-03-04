@@ -1,0 +1,18 @@
+{
+  "version": "eurusd_5m_v001",
+  "pair": "EUR/USD",
+  "timeframe": "5m",
+  "model_class": "lightgbm",
+  "model_params": {
+    "n_estimators": 1000,
+    "learning_rate": 0.02,
+    "num_leaves": 127,
+    "max_depth": 8,
+    "min_child_samples": 30,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "class_weight": "balanced"
+  },
+  "random_seed": 42,
+  "train_end_date": "2023-12-29"
+}

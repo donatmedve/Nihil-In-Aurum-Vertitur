@@ -20,7 +20,7 @@ PIPELINE_DIR = f"artifacts/pipeline_{VERSION}"
 def evaluate_fold(proba, y_test):
     signals = []
     for i in range(len(proba)):
-        sig, conf = compute_signal(proba[i], min_confidence=0.40, min_margin=0.05)
+        sig, conf = compute_signal(proba[i], min_confidence=0.55, min_margin=0.10)
         signals.append((sig, conf))
 
     n_total   = len(signals)
@@ -62,13 +62,13 @@ def main():
 
     # ── Walk-forward config adjusted for 100k bars (16 months of data) ──
     wf_config = WalkForwardConfig(
-        train_bars=50_000,
-        purge_bars=12,
-        val_bars=8_760,
-        embargo_bars=12,
-        test_bars=4_380,
-        step_bars=4_380,
-        min_folds=3,
+    train_bars=300_000,   # ~4 years
+    purge_bars=12,
+    val_bars=75_000,      # ~1 year
+    embargo_bars=12,
+    test_bars=37_500,     # ~6 months
+    step_bars=37_500,
+    min_folds=3,
     )
 
     try:
