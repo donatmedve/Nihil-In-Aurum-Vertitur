@@ -257,7 +257,37 @@ class FeaturePipeline:
         day = utc_dt.day.astype(float)
         days_in_month = utc_dt.days_in_month.astype(float)
         out["days_to_month_end"] = (days_in_month - day) / days_in_month
+        if isinstance(df.index, pd.DatetimeIndex):
+            hour = df.index.hour
+        else:
+            hour = pd.DatetimeIndex(df["utc_open"]).hour
+        out["hour_sin"] = np.sin(2 * np.pi * hour / 24)
+        out["hour_cos"] = np.cos(2 * np.pi * hour / 24)
+        out["is_london"]  = ((hour >= 7)  & (hour < 16)).astype(float)
+        out["is_ny"]      = ((hour >= 13) & (hour < 21)).astype(float)
+        out["is_overlap"] = ((hour >= 13) & (hour < 16)).astype(float)
 
+        # ---- Trend alignment (price vs longer MAs) ----
+        ma50  = df["close_bid"].rolling(50,  min_periods=25).mean()
+        ma200 = df["close_bid"].rolling(200, min_periods=100).mean()
+        out["price_vs_ma50"]  = ((df["close_bid"] - ma50)  / ma50).shift(1)
+        out["price_vs_ma200"] = ((df["close_bid"] - ma200) / ma200).shift(1)
+        out["ma50_vs_ma200"]  = ((ma50 - ma200) / ma200).shift(1)
+
+        # ---- Bar structure (order flow proxy) ----
+        hi_lo = (df["high_bid"] - df["low_bid"]).replace(0, np.nan)
+        out["close_position"] = ((df["close_bid"] - df["low_bid"]) / hi_lo).shift(1)
+        out["upper_wick"]     = ((df["high_bid"] - df[["close_bid","open_bid"]].max(axis=1)) / hi_lo).shift(1)
+        out["lower_wick"]     = ((df[["close_bid","open_bid"]].min(axis=1) - df["low_bid"]) / hi_lo).shift(1)
+
+        # ---- Momentum across more timeframes ----
+        out["log_ret_24"]  = np.log(df["close_bid"] / df["close_bid"].shift(24)).shift(1)
+        out["log_ret_48"]  = np.log(df["close_bid"] / df["close_bid"].shift(48)).shift(1)
+        out["log_ret_288"] = np.log(df["close_bid"] / df["close_bid"].shift(288)).shift(1)  # ~1 day
+
+        # ---- Volume ----
+        vol_ma = df["volume"].rolling(20, min_periods=10).mean().replace(0, np.nan)
+        out["volume_ratio"] = (df["volume"] / vol_ma).shift(1)
         return out
 
 

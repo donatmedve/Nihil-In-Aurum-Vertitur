@@ -127,13 +127,13 @@ def construct_labels(
 
         # Label: only assign directional label when one side wins clearly
         if long_outcome == 1 and short_outcome != 1:
-            labels.iloc[i] = Signal.LONG.value
+            labels.iloc[i] = 1          # LONG
             labeled_long += 1
         elif short_outcome == 1 and long_outcome != 1:
-            labels.iloc[i] = Signal.SHORT.value
+            labels.iloc[i] = -1         # SHORT
             labeled_short += 1
         else:
-            labels.iloc[i] = Signal.ABSTAIN.value
+            labels.iloc[i] = 0          # ABSTAIN
             labeled_abstain += 1
 
     # Last max_holding_bars rows: labels undefined
