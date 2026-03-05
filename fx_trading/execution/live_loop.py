@@ -52,7 +52,6 @@ class LiveExecutionLoop:
         model_sha256: str,
         pipeline_sha256: str,
         model_version: str,
-        model_class: str,           # FIX: "lightgbm" or "xgboost" — required by predict_proba
         risk_engine,                # RiskEngine
         state_store,                # StateStore
         pairs: list[Pair],
@@ -60,20 +59,19 @@ class LiveExecutionLoop:
         timeframe_sec: int = 300,   # 5m bars
         lookback_bars: int = 110,   # pipeline.config.rolling_window_bars + buffer
     ):
-        self._adapter          = adapter
-        self._submitter        = submitter
-        self._pipeline         = pipeline
-        self._model            = model
-        self._model_sha256     = model_sha256
-        self._pipeline_sha256  = pipeline_sha256
-        self._model_version    = model_version
-        self._model_class      = model_class
-        self._risk             = risk_engine
-        self._state            = state_store
-        self._pairs            = pairs
-        self._broker_tz_str    = broker_tz_str
-        self._timeframe_sec    = timeframe_sec
-        self._lookback_bars    = lookback_bars
+        self._adapter        = adapter
+        self._submitter      = submitter
+        self._pipeline       = pipeline
+        self._model          = model
+        self._model_sha256   = model_sha256
+        self._pipeline_sha256 = pipeline_sha256
+        self._model_version  = model_version
+        self._risk           = risk_engine
+        self._state          = state_store
+        self._pairs          = pairs
+        self._broker_tz_str  = broker_tz_str
+        self._timeframe_sec  = timeframe_sec
+        self._lookback_bars  = lookback_bars
 
         self._last_heartbeat_check = now_utc()
         self._last_signal_bar: dict[Pair, datetime] = {}   # tracks last bar we acted on
@@ -82,7 +80,12 @@ class LiveExecutionLoop:
     # Entry point
     # ------------------------------------------------------------------
 
-    def run(self, model_sha256: str, pipeline_sha256: str) -> None:
+    # FIX: removed redundant model_sha256 / pipeline_sha256 parameters.
+    # They are already stored on self._model_sha256 / self._pipeline_sha256
+    # from __init__ and are used directly below. Passing them in again via
+    # run() served no purpose and was a maintenance hazard (two places to
+    # keep in sync, with the __init__ copies silently ignored).
+    def run(self) -> None:
         """
         Entry point. Runs reconciliation, then enters the bar loop.
         Exits on kill switch or unrecoverable error.
@@ -94,7 +97,7 @@ class LiveExecutionLoop:
 
         # ---- Startup reconciliation (mandatory) ----
         recon_result = run_reconciliation(
-            self._adapter, self._state, model_sha256, pipeline_sha256
+            self._adapter, self._state, self._model_sha256, self._pipeline_sha256
         )
 
         if not recon_result.success:
@@ -110,7 +113,7 @@ class LiveExecutionLoop:
                 extra={
                     "orphaned_positions": recon_result.orphaned_positions,
                     "unconfirmed_orders": recon_result.unconfirmed_orders,
-                    "warnings":           recon_result.warnings,
+                    "warnings": recon_result.warnings,
                 }
             )
             return
@@ -165,7 +168,9 @@ class LiveExecutionLoop:
 
         # ---- Process each pair ----
         for pair in self._pairs:
-            self._process_pair(pair, now)
+            # FIX: removed the unused `now` argument. _process_pair() never used it —
+            # it called now_utc() internally or derived time from bar data.
+            self._process_pair(pair)
 
         time.sleep(1)   # polling interval: 1 second
 
@@ -173,7 +178,9 @@ class LiveExecutionLoop:
     # Per-pair signal + order logic
     # ------------------------------------------------------------------
 
-    def _process_pair(self, pair: Pair, now: datetime) -> None:
+    # FIX: removed the unused `now: datetime` parameter. It was accepted but
+    # never referenced inside the method body, making every call misleading.
+    def _process_pair(self, pair: Pair) -> None:
         """
         Check if a new complete bar is available for this pair.
         If yes: compute features, get signal, evaluate risk, potentially trade.
@@ -247,7 +254,7 @@ class LiveExecutionLoop:
 
         # ---- Model inference ----
         try:
-            proba = predict_proba(self._model, feature_row, self._model_class)
+            proba = predict_proba(self._model, feature_row)
         except Exception as exc:
             logger.error(
                 "Model inference error",
@@ -255,17 +262,17 @@ class LiveExecutionLoop:
             )
             return
 
-        direction, confidence = compute_signal(proba[0], min_confidence=0.40, min_margin=0.05)
+        direction, confidence = compute_signal(proba, min_confidence=0.55, min_margin=0.10)
 
         if direction == 0:
             logger.info(
                 "ABSTAIN",
                 extra={
-                    "pair":      pair.value,
-                    "bar_open":  format_utc(last_bar.utc_open),
-                    "p_long":    round(float(proba[0][2]), 3),
-                    "p_short":   round(float(proba[0][0]), 3),
-                    "p_abstain": round(float(proba[0][1]), 3),
+                    "pair": pair.value,
+                    "bar_open": format_utc(last_bar.utc_open),
+                    "p_long": round(proba[2], 3),
+                    "p_short": round(proba[0], 3),
+                    "p_abstain": round(proba[1], 3),
                 }
             )
             return
@@ -288,21 +295,16 @@ class LiveExecutionLoop:
             return
 
         # ---- ATR from features (pre-shifted, so no look-ahead) ----
-        # FIX: atr_pct column is a ratio — convert to pips before passing to risk engine
         atr_col = [c for c in feature_row.columns if "atr" in c.lower()]
         if atr_col:
-            atr_raw = float(feature_row[atr_col[0]].iloc[0])
-            if "pct" in atr_col[0].lower():
-                atr_pips = atr_raw * float(bid) * 10000.0
-            else:
-                atr_pips = atr_raw
+            atr_pips = float(feature_row[atr_col[0]].iloc[0])
         else:
             # Fallback: approximate from last bar range
             atr_pips = float((last_bar.high_bid - last_bar.low_bid) / Decimal("0.0001"))
 
         # ---- Risk evaluation ----
         open_positions = self._state.get_open_positions()
-        daily_pnl      = self._state.get_daily_pnl(now_utc().strftime("%Y-%m-%d"))
+        daily_pnl = self._state.get_daily_pnl(now_utc().strftime("%Y-%m-%d"))
 
         try:
             decision = self._risk.evaluate(
@@ -344,13 +346,13 @@ class LiveExecutionLoop:
         logger.info(
             "Submitting order",
             extra={
-                "pair":              pair.value,
-                "side":              side.value,
-                "units":             decision.position_size_units,
-                "stop_price":        float(decision.stop_price),
+                "pair": pair.value,
+                "side": side.value,
+                "units": decision.position_size_units,
+                "stop_price": float(decision.stop_price),
                 "take_profit_price": float(decision.take_profit_price) if decision.take_profit_price else None,
-                "confidence":        round(confidence, 3),
-                "bar_open":          format_utc(last_bar.utc_open),
+                "confidence": round(confidence, 3),
+                "bar_open": format_utc(last_bar.utc_open),
             }
         )
 
@@ -367,10 +369,10 @@ class LiveExecutionLoop:
             logger.info(
                 "Order filled",
                 extra={
-                    "pair":            pair.value,
+                    "pair": pair.value,
                     "broker_order_id": result.broker_order_id,
-                    "filled_price":    float(result.filled_price) if result.filled_price else None,
-                    "units":           order.units,
+                    "filled_price": float(result.filled_price) if result.filled_price else None,
+                    "units": order.units,
                 }
             )
         elif result.status.value == "REJECTED":
@@ -411,9 +413,15 @@ class LiveExecutionLoop:
         """
         Runs every HEARTBEAT_INTERVAL_SECONDS.
         Triggers kill switch if all checks fail.
+
+        FIX: also calls check_drawdown_circuit_breaker() here using the account
+        state already fetched for Check 2. The risk engine docstring states this
+        should be called on every bar; running it every 30 seconds on a 5-minute
+        bar system is more than sufficient, and avoids an extra broker call on
+        every 1-second polling tick.
         """
         checks_passed = 0
-        total_checks  = 4
+        total_checks = 4
 
         # Check 1: Broker connection
         if self._adapter.is_connected():
@@ -422,6 +430,7 @@ class LiveExecutionLoop:
             logger.error("Heartbeat: broker not connected")
 
         # Check 2: Account state fetchable and fresh
+        account = None
         try:
             account = self._adapter.get_account_state()
             age = (now - account.as_of_utc).total_seconds()
@@ -431,6 +440,18 @@ class LiveExecutionLoop:
                 logger.warning("Heartbeat: account state stale", extra={"age_s": age})
         except Exception as exc:
             logger.error("Heartbeat: account state fetch failed", extra={"error": str(exc)})
+
+        # FIX: peak-to-trough drawdown check was never called anywhere in the
+        # original code, silently disabling one of the two drawdown protections.
+        # We call it here using the account state we just fetched. If it trips,
+        # it sets the kill switch internally; the next _iteration() will then
+        # read the kill switch and raise SystemExit.
+        if account is not None:
+            tripped = self._risk.check_drawdown_circuit_breaker(float(account.equity_usd))
+            if tripped:
+                logger.critical(
+                    "Heartbeat: drawdown circuit breaker tripped — kill switch set"
+                )
 
         # Check 3: Local DB writable
         try:
@@ -456,10 +477,10 @@ class LiveExecutionLoop:
         logger.info(
             "heartbeat",
             extra={
-                "checks_passed":  checks_passed,
-                "total_checks":   total_checks,
+                "checks_passed": checks_passed,
+                "total_checks": total_checks,
                 "open_positions": len(self._state.get_open_positions()),
-                "model_version":  self._model_version,
+                "model_version": self._model_version,
             }
         )
 

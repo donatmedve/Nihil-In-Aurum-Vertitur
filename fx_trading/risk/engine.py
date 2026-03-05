@@ -8,6 +8,10 @@
 # Changes vs original:
 #   - take_profit_price added to RiskDecision output (1.5× ATR, matching label construction)
 #   - RiskParameters.tp_atr_multiplier added (default 1.5)
+#   - FIX: correlated USD exposure check now computes NET exposure correctly.
+#     Previously the position list was pre-filtered to `desired_side` AND the
+#     else-branch multiplied by -1, making the -1 branch permanently dead code.
+#     The filter has been removed so opposing positions reduce the net exposure.
 
 import logging
 from dataclasses import dataclass
@@ -36,7 +40,7 @@ class RiskParameters:
     min_atr_pips: float = 5.0              # skip trades in flat markets
     max_spread_to_atr_ratio: float = 0.25  # skip if spread > 25% of ATR
 
-    # Correlated exposure cap (EUR/USD + GBP/USD both long USD)
+    # Correlated exposure cap (EUR/USD + GBP/USD both long/short USD)
     max_correlated_usd_exposure: float = 10_000.0   # in USD notional
 
     # Stop loss: 1.0× ATR + half-spread buffer
@@ -144,13 +148,21 @@ class RiskEngine:
             )
 
         # ---- Circuit breaker 8: Correlated USD exposure ----
+        # EUR/USD and GBP/USD are correlated: both going LONG means selling USD twice.
+        # FIX: previously, positions were pre-filtered to `desired_side` before
+        # computing the sum, making the `else -1` multiplier dead code and causing
+        # the check to ignore offsetting positions on the other side.
+        # Now we iterate ALL positions in the correlated pairs and assign +1 to
+        # positions on the same side as the new trade (additive exposure) and -1
+        # to opposing positions (they reduce net exposure). This gives the correct
+        # net USD directional exposure.
         if pair in (Pair.EURUSD, Pair.GBPUSD):
             desired_side = Side.BUY if signal == 1 else Side.SELL
             correlated_pairs = [Pair.EURUSD, Pair.GBPUSD]
             correlated_usd_exposure = sum(
                 p.units * float(p.entry_price) * (1 if p.side == desired_side else -1)
                 for p in open_positions
-                if p.pair in correlated_pairs and p.side == desired_side
+                if p.pair in correlated_pairs   # no side filter — compute net exposure
             )
             if correlated_usd_exposure >= self.params.max_correlated_usd_exposure:
                 return deny(
@@ -274,8 +286,8 @@ class RiskEngine:
     def check_drawdown_circuit_breaker(self, equity_usd: float) -> bool:
         """
         Returns True if the peak-to-trough drawdown exceeds the daily limit.
-        Call on every bar during the execution loop.
-        If True, the caller must set the kill switch and halt.
+        Call on every heartbeat (every 30s) via the live loop.
+        If True, the kill switch is set internally — caller should raise SystemExit.
         """
         self._state.update_high_water_mark(equity_usd)
         drawdown = self._state.get_drawdown_from_peak(equity_usd)
