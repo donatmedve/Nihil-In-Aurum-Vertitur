@@ -188,6 +188,7 @@ def main():
         model_sha256=manifest["sha256"],
         pipeline_sha256=pipeline_sha256,
         model_version=manifest["version"],
+        model_class=manifest["model_class"],  # FIX: pass model_class from manifest
         risk_engine=risk_engine,
         state_store=store,
         pairs=pairs,
@@ -195,6 +196,14 @@ def main():
         timeframe_sec=300,      # 5-minute bars
         lookback_bars=110,      # rolling_window_bars + 10 bar buffer
     )
+
+    logger.info("Handing off to execution loop. Press Ctrl+C to stop cleanly.")
+    loop.run(
+        model_sha256=manifest["sha256"],
+        pipeline_sha256=pipeline_sha256,
+    )
+
+    logger.info("Execution loop exited cleanly.")
 
     logger.info("Handing off to execution loop. Press Ctrl+C to stop cleanly.")
     loop.run(

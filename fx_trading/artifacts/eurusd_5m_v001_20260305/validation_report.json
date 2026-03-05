@@ -1,0 +1,104 @@
+{
+  "fold_results": [
+    {
+      "n_bars": 25578,
+      "n_abstain": 23947,
+      "abstain_pct": 93.6,
+      "hit_rate": 0.3,
+      "n_traded": 1631,
+      "fold_id": 0
+    },
+    {
+      "n_bars": 22320,
+      "n_abstain": 21237,
+      "abstain_pct": 95.1,
+      "hit_rate": 0.285,
+      "n_traded": 1083,
+      "fold_id": 1
+    },
+    {
+      "n_bars": 14126,
+      "n_abstain": 13553,
+      "abstain_pct": 95.9,
+      "hit_rate": 0.239,
+      "n_traded": 573,
+      "fold_id": 2
+    },
+    {
+      "n_bars": 12418,
+      "n_abstain": 11530,
+      "abstain_pct": 92.8,
+      "hit_rate": 0.343,
+      "n_traded": 888,
+      "fold_id": 3
+    },
+    {
+      "n_bars": 27348,
+      "n_abstain": 22654,
+      "abstain_pct": 82.8,
+      "hit_rate": 0.289,
+      "n_traded": 4694,
+      "fold_id": 4
+    },
+    {
+      "n_bars": 22712,
+      "n_abstain": 22345,
+      "abstain_pct": 98.4,
+      "hit_rate": 0.272,
+      "n_traded": 367,
+      "fold_id": 5
+    },
+    {
+      "n_bars": 16383,
+      "n_abstain": 16014,
+      "abstain_pct": 97.7,
+      "hit_rate": 0.301,
+      "n_traded": 369,
+      "fold_id": 6
+    },
+    {
+      "n_bars": 21525,
+      "n_abstain": 18226,
+      "abstain_pct": 84.7,
+      "hit_rate": 0.298,
+      "n_traded": 3299,
+      "fold_id": 7
+    },
+    {
+      "n_bars": 30288,
+      "n_abstain": 24339,
+      "abstain_pct": 80.4,
+      "hit_rate": 0.29,
+      "n_traded": 5949,
+      "fold_id": 8
+    },
+    {
+      "n_bars": 28397,
+      "n_abstain": 27563,
+      "abstain_pct": 97.1,
+      "hit_rate": 0.315,
+      "n_traded": 834,
+      "fold_id": 9
+    },
+    {
+      "n_bars": 19853,
+      "n_abstain": 19825,
+      "abstain_pct": 99.9,
+      "hit_rate": 0.143,
+      "n_traded": 28,
+      "fold_id": 10
+    }
+  ],
+  "aggregate": {
+    "avg_hit_rate": 0.27954545454545454,
+    "avg_abstain_pct": 92.58181818181818,
+    "avg_trades_fold": 1792.2727272727273,
+    "n_folds": 11,
+    "eval_min_confidence": 0.4,
+    "eval_min_margin": 0.05
+  },
+  "deployment_approved": false,
+  "approved_by": null,
+  "approved_at": null,
+  "notes": ""
+}

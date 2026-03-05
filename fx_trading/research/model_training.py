@@ -116,7 +116,7 @@ def _train_lgbm(X_train, y_train, X_val, y_val, config: ModelConfig):
         sample_weight=sample_weight,
         eval_set=[(X_val, y_val_mapped)],
         callbacks=[
-            lgb.early_stopping(stopping_rounds=50, verbose=False),
+            lgb.early_stopping(stopping_rounds=200, verbose=False),
             lgb.log_evaluation(period=-1),
         ],
     )
@@ -155,7 +155,7 @@ def _train_xgboost(X_train, y_train, X_val, y_val, config: ModelConfig):
     model.fit(
         X_train, y_train_mapped,
         eval_set=[(X_val, y_val_mapped)],
-        early_stopping_rounds=50,
+        early_stopping_rounds=200,
         verbose=False,
     )
     return model
