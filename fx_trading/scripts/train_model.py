@@ -41,7 +41,7 @@ def evaluate_fold(proba, y_test):
     correct   = 0
     traded    = 0
     for (sig, _), true in zip(signals, y_test.values):
-        if sig != 0:
+        if sig != 0 and true != 0:
             traded += 1
             if sig == true:
                 correct += 1

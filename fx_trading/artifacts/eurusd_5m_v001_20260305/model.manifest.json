@@ -1,10 +1,10 @@
 {
-  "sha256": "b8ec849f50fc0a4c49f04fe0b35496cd5e128e8f3bd3ad4ec3eebe12ce567435",
+  "sha256": "acabec73c4d2e8d6fd4395398895fca8da6b8fb5e434e65e5a43a9da3678420c",
   "version": "eurusd_5m_v001",
   "model_class": "lightgbm",
   "pair": "EUR/USD",
   "timeframe": "5m",
   "train_end_date": "2023-12-29",
-  "saved_at": "2026-03-05T10:42:34.853829+00:00",
+  "saved_at": "2026-03-05T10:59:43.342911+00:00",
   "deployment_approved": false
 }
