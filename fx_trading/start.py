@@ -13,25 +13,30 @@
 #   4. Your demo forward test has passed (see README Section 10)
 # ============================================================
 
+import os
 import sys
+import shutil
+import tempfile
+import hashlib
 import logging
+import threading
 import structlog
 from pathlib import Path
 
 # ── CONFIGURATION — fill these in ──────────────────────────────────────────
-MT5_LOGIN    = 12345678          # Your MT5 account number
-MT5_PASSWORD = "your_password"  # Your MT5 password
-MT5_SERVER   = "YourBroker-Demo"  # Your broker's MT5 server name (find in MT5 terminal)
-BROKER_TZ    = "Etc/GMT-2"      # Your broker's server timezone — CHECK YOUR BROKER DOCS
-                                  # Common values: "Etc/GMT-2", "Etc/GMT-3", "US/Eastern"
+MT5_LOGIN             = 104006127
+MT5_PASSWORD          = "_iHb3pEl"
+MT5_SERVER            = "MetaQuotes-Demo"
+BROKER_TZ             = "Etc/GMT-2"
 
-MODEL_ARTIFACT_DIR  = "artifacts/eurusd_5m_v001_20240115"   # path to your trained model
-PIPELINE_ARTIFACT_DIR = "artifacts/pipeline_eurusd_5m_v001"  # path to your saved pipeline
-STATE_DB_PATH = "state/trading.db"
-LOG_DIR       = "logs"
+MODEL_ARTIFACT_DIR    = "artifacts/eurusd_5m_v001_20260305"
+PIPELINE_ARTIFACT_DIR = "artifacts/pipeline_eurusd_5m_v001"
+STATE_DB_PATH         = "state/trading.db"
+LOG_DIR               = "logs"
+DASHBOARD_HOST        = "0.0.0.0"
+DASHBOARD_PORT        = 5050
 # ──────────────────────────────────────────────────────────────────────────
 
-# Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 
@@ -49,7 +54,6 @@ def setup_logging():
         logger_factory=structlog.PrintLoggerFactory(),
     )
 
-    # Also write to file
     file_handler = logging.FileHandler(f"{LOG_DIR}/live.jsonl")
     file_handler.setLevel(logging.DEBUG)
     logging.basicConfig(handlers=[file_handler, logging.StreamHandler()], level=logging.INFO)
@@ -67,7 +71,7 @@ def main():
     import unittest
     loader = unittest.TestLoader()
     suite  = loader.discover("tests")
-    runner = unittest.TextTestRunner(verbosity=0, stream=open("/dev/null", "w"))
+    runner = unittest.TextTestRunner(verbosity=0, stream=open(os.devnull, "w"))
     result = runner.run(suite)
 
     if not result.wasSuccessful():
@@ -75,9 +79,9 @@ def main():
             f"TEST SUITE FAILED: {len(result.failures)} failures, "
             f"{len(result.errors)} errors. DO NOT PROCEED."
         )
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("TESTS FAILED — run 'python -m unittest tests.test_all -v' to see details")
-        print("="*60)
+        print("=" * 60)
         sys.exit(1)
 
     logger.info(f"All {result.testsRun} tests passed.")
@@ -97,9 +101,7 @@ def main():
     )
 
     if not adapter.is_connected():
-        logger.critical(
-            "Cannot connect to MT5. Is the terminal running and logged in?"
-        )
+        logger.critical("Cannot connect to MT5. Is the terminal running and logged in?")
         sys.exit(1)
 
     account = adapter.get_account_state()
@@ -111,7 +113,7 @@ def main():
 
     # Safety check: warn loudly if this looks like a live account on first run
     if float(account.equity_usd) > 10_000 and not Path(STATE_DB_PATH).exists():
-        print("\n" + "!"*60)
+        print("\n" + "!" * 60)
         print("WARNING: Large account equity detected on first run.")
         print("Are you sure this is a DEMO account?")
         print("Type 'YES' to continue, anything else to abort:")
@@ -123,7 +125,6 @@ def main():
     # ── 4. Load model + pipeline ──────────────────────────────────
     from research.model_training import load_model
     from features.pipeline import FeaturePipeline
-    import json
 
     logger.info(f"Loading model from {MODEL_ARTIFACT_DIR}...")
     model, manifest = load_model(MODEL_ARTIFACT_DIR, require_approved=True)
@@ -137,23 +138,18 @@ def main():
     pipeline = FeaturePipeline.load(PIPELINE_ARTIFACT_DIR)
     logger.info("Pipeline loaded.")
 
-    # FIX: Read pipeline SHA-256 directly from the saved manifest file.
-    # Previously the code computed SHA256 of a freshly-created empty temp file,
-    # which produced the wrong hash and caused reconciliation to fail on every restart.
-    pipeline_manifest_path = Path(PIPELINE_ARTIFACT_DIR) / "pipeline.manifest.json"
-    if not pipeline_manifest_path.exists():
-        logger.critical(
-            f"Pipeline manifest not found at {pipeline_manifest_path}. "
-            f"Re-save the pipeline artifact before deploying."
-        )
-        sys.exit(1)
-    pipeline_sha256 = json.loads(pipeline_manifest_path.read_text())["sha256"]
+    # Compute pipeline SHA256 by saving to a temp dir and hashing pipeline.pkl
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        pipeline.save(os.path.join(tmp_dir, "pipeline"))
+        pkl_path = os.path.join(tmp_dir, "pipeline", "pipeline.pkl")
+        pipeline_sha256 = hashlib.sha256(Path(pkl_path).read_bytes()).hexdigest()
+    finally:
+        shutil.rmtree(tmp_dir)
     logger.info(f"Pipeline sha256={pipeline_sha256[:12]}...")
 
-    # ── 5. Set up broker adapter idempotent submitter ─────────────
+    # ── 5. Set up idempotent order submitter ──────────────────────
     from broker.adapter import IdempotentOrderSubmitter
-
-    # FIX: model_version is a required argument — previously omitted, causing TypeError at startup.
     submitter = IdempotentOrderSubmitter(
         adapter=adapter,
         state_store=store,
@@ -162,7 +158,7 @@ def main():
 
     # ── 6. Set up risk engine ─────────────────────────────────────
     from risk.engine import RiskEngine, RiskParameters
-    risk_params = RiskParameters()   # uses safe defaults — tune after demo period
+    risk_params = RiskParameters()
     risk_engine = RiskEngine(params=risk_params, state_store=store)
 
     logger.info(
@@ -183,13 +179,22 @@ def main():
         logger.warning(f"Unknown pair in manifest: {model_pair_str}. Defaulting to EUR/USD.")
         primary_pair = PairEnum.EURUSD
 
-    # Trade the pair the model was trained on.
-    # To add more pairs, train separate models and instantiate separate loops,
-    # OR add pairs here if your model is multi-pair (ensure pipeline handles all pairs).
     pairs = [primary_pair]
     logger.info(f"Trading pairs: {[p.value for p in pairs]}")
 
-    # ── 8. Start live loop ────────────────────────────────────────
+    # ── 8. Start dashboard in background thread ───────────────────
+    def _run_dashboard():
+        try:
+            from monitoring.dashboard import app
+            app.run(host=DASHBOARD_HOST, port=DASHBOARD_PORT, debug=False, use_reloader=False)
+        except Exception as e:
+            logger.warning(f"Dashboard failed to start: {e}")
+
+    dashboard_thread = threading.Thread(target=_run_dashboard, daemon=True)
+    dashboard_thread.start()
+    logger.info(f"Dashboard started at http://192.168.50.68:{DASHBOARD_PORT}")
+
+    # ── 9. Start live loop ────────────────────────────────────────
     from execution.live_loop import LiveExecutionLoop
 
     loop = LiveExecutionLoop(
@@ -200,18 +205,20 @@ def main():
         model_sha256=manifest["sha256"],
         pipeline_sha256=pipeline_sha256,
         model_version=manifest["version"],
+        model_class=manifest["model_class"],
         risk_engine=risk_engine,
         state_store=store,
         pairs=pairs,
         broker_tz_str=BROKER_TZ,
-        timeframe_sec=300,      # 5-minute bars
-        lookback_bars=110,      # rolling_window_bars + 10 bar buffer
+        timeframe_sec=300,
+        lookback_bars=110,
     )
 
     logger.info("Handing off to execution loop. Press Ctrl+C to stop cleanly.")
-    # FIX: run() no longer takes sha256 arguments — it uses the values already
-    # stored on self._model_sha256 / self._pipeline_sha256 from __init__.
-    loop.run()
+    loop.run(
+        model_sha256=manifest["sha256"],
+        pipeline_sha256=pipeline_sha256,
+    )
 
     logger.info("Execution loop exited cleanly.")
 
