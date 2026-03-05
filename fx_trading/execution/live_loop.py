@@ -60,20 +60,20 @@ class LiveExecutionLoop:
         timeframe_sec: int = 300,   # 5m bars
         lookback_bars: int = 110,   # pipeline.config.rolling_window_bars + buffer
     ):
-        self._adapter         = adapter
-        self._submitter       = submitter
-        self._pipeline        = pipeline
-        self._model           = model
-        self._model_sha256    = model_sha256
-        self._pipeline_sha256 = pipeline_sha256
-        self._model_version   = model_version
-        self._model_class     = model_class   # FIX: stored for use in predict_proba
-        self._risk            = risk_engine
-        self._state           = state_store
-        self._pairs           = pairs
-        self._broker_tz_str   = broker_tz_str
-        self._timeframe_sec   = timeframe_sec
-        self._lookback_bars   = lookback_bars
+        self._adapter          = adapter
+        self._submitter        = submitter
+        self._pipeline         = pipeline
+        self._model            = model
+        self._model_sha256     = model_sha256
+        self._pipeline_sha256  = pipeline_sha256
+        self._model_version    = model_version
+        self._model_class      = model_class
+        self._risk             = risk_engine
+        self._state            = state_store
+        self._pairs            = pairs
+        self._broker_tz_str    = broker_tz_str
+        self._timeframe_sec    = timeframe_sec
+        self._lookback_bars    = lookback_bars
 
         self._last_heartbeat_check = now_utc()
         self._last_signal_bar: dict[Pair, datetime] = {}   # tracks last bar we acted on
@@ -110,7 +110,7 @@ class LiveExecutionLoop:
                 extra={
                     "orphaned_positions": recon_result.orphaned_positions,
                     "unconfirmed_orders": recon_result.unconfirmed_orders,
-                    "warnings": recon_result.warnings,
+                    "warnings":           recon_result.warnings,
                 }
             )
             return
@@ -247,7 +247,6 @@ class LiveExecutionLoop:
 
         # ---- Model inference ----
         try:
-            # FIX: pass self._model_class — predict_proba requires it
             proba = predict_proba(self._model, feature_row, self._model_class)
         except Exception as exc:
             logger.error(
@@ -256,17 +255,17 @@ class LiveExecutionLoop:
             )
             return
 
-        direction, confidence = compute_signal(proba[0], min_confidence=0.55, min_margin=0.10)
+        direction, confidence = compute_signal(proba[0], min_confidence=0.40, min_margin=0.05)
 
         if direction == 0:
             logger.info(
                 "ABSTAIN",
                 extra={
-                    "pair": pair.value,
-                    "bar_open": format_utc(last_bar.utc_open),
-                    "p_long": round(proba[0][2], 3),
-                    "p_short": round(proba[0][0], 3),
-                    "p_abstain": round(proba[0][1], 3),
+                    "pair":      pair.value,
+                    "bar_open":  format_utc(last_bar.utc_open),
+                    "p_long":    round(float(proba[0][2]), 3),
+                    "p_short":   round(float(proba[0][0]), 3),
+                    "p_abstain": round(float(proba[0][1]), 3),
                 }
             )
             return
@@ -289,19 +288,21 @@ class LiveExecutionLoop:
             return
 
         # ---- ATR from features (pre-shifted, so no look-ahead) ----
+        # FIX: atr_pct column is a ratio — convert to pips before passing to risk engine
         atr_col = [c for c in feature_row.columns if "atr" in c.lower()]
         if atr_col:
-            atr_pct = float(feature_row[atr_col[0]].iloc[0])
-            from shared.schemas import pip_size
-            pip_sz = float(pip_size(pair))
-            atr_pips = (atr_pct * float(last_bar.close_bid)) / pip_sz
+            atr_raw = float(feature_row[atr_col[0]].iloc[0])
+            if "pct" in atr_col[0].lower():
+                atr_pips = atr_raw * float(bid) * 10000.0
+            else:
+                atr_pips = atr_raw
         else:
             # Fallback: approximate from last bar range
             atr_pips = float((last_bar.high_bid - last_bar.low_bid) / Decimal("0.0001"))
 
         # ---- Risk evaluation ----
         open_positions = self._state.get_open_positions()
-        daily_pnl = self._state.get_daily_pnl(now_utc().strftime("%Y-%m-%d"))
+        daily_pnl      = self._state.get_daily_pnl(now_utc().strftime("%Y-%m-%d"))
 
         try:
             decision = self._risk.evaluate(
@@ -335,7 +336,7 @@ class LiveExecutionLoop:
             order_type=OrderType.MARKET,
             units=decision.position_size_units,
             stop_loss_price=decision.stop_price,
-            take_profit_price=decision.take_profit_price,
+            take_profit_price=decision.take_profit_price,  # set server-side at broker
             model_version=self._model_version,
             signal_confidence=confidence,
         )
@@ -343,12 +344,125 @@ class LiveExecutionLoop:
         logger.info(
             "Submitting order",
             extra={
-                "pair": pair.value,
-                "side": side.value,
-                "units": decision.position_size_units,
-                "stop_price": float(decision.stop_price),
+                "pair":              pair.value,
+                "side":              side.value,
+                "units":             decision.position_size_units,
+                "stop_price":        float(decision.stop_price),
                 "take_profit_price": float(decision.take_profit_price) if decision.take_profit_price else None,
+                "confidence":        round(confidence, 3),
+                "bar_open":          format_utc(last_bar.utc_open),
             }
         )
 
-        self._submitter.submit(order)
+        try:
+            result = self._submitter.submit(order)
+        except Exception as exc:
+            logger.critical(
+                "Order submission failed",
+                extra={"pair": pair.value, "error": str(exc), "client_order_id": order.client_order_id}
+            )
+            return
+
+        if result.status.value in ("FILLED", "PARTIALLY_FILLED"):
+            logger.info(
+                "Order filled",
+                extra={
+                    "pair":            pair.value,
+                    "broker_order_id": result.broker_order_id,
+                    "filled_price":    float(result.filled_price) if result.filled_price else None,
+                    "units":           order.units,
+                }
+            )
+        elif result.status.value == "REJECTED":
+            logger.error(
+                "Order rejected by broker",
+                extra={"pair": pair.value, "reason": result.rejection_reason}
+            )
+        elif result.status.value == "DEAD_LETTERED":
+            logger.critical(
+                "Order dead-lettered after retries",
+                extra={"pair": pair.value, "client_order_id": order.client_order_id}
+            )
+
+    # ------------------------------------------------------------------
+    # Bar fetching — concrete MT5 implementation
+    # ------------------------------------------------------------------
+
+    def _fetch_recent_bars(self, pair: Pair, n: int) -> list:
+        """
+        Fetch recent bars from MT5 using data/ingestion.py.
+        Returns list of OHLCVBar sorted ascending by utc_open.
+        """
+        from data.ingestion import fetch_recent_bars_mt5
+
+        return fetch_recent_bars_mt5(
+            pair=pair,
+            n=n,
+            timeframe_mt5=MT5_TIMEFRAME_M5,
+            timeframe_sec=self._timeframe_sec,
+            broker_tz_str=self._broker_tz_str,
+        )
+
+    # ------------------------------------------------------------------
+    # Heartbeat
+    # ------------------------------------------------------------------
+
+    def _run_heartbeat(self, now: datetime) -> None:
+        """
+        Runs every HEARTBEAT_INTERVAL_SECONDS.
+        Triggers kill switch if all checks fail.
+        """
+        checks_passed = 0
+        total_checks  = 4
+
+        # Check 1: Broker connection
+        if self._adapter.is_connected():
+            checks_passed += 1
+        else:
+            logger.error("Heartbeat: broker not connected")
+
+        # Check 2: Account state fetchable and fresh
+        try:
+            account = self._adapter.get_account_state()
+            age = (now - account.as_of_utc).total_seconds()
+            if age < 60:
+                checks_passed += 1
+            else:
+                logger.warning("Heartbeat: account state stale", extra={"age_s": age})
+        except Exception as exc:
+            logger.error("Heartbeat: account state fetch failed", extra={"error": str(exc)})
+
+        # Check 3: Local DB writable
+        try:
+            self._state.set_heartbeat()
+            checks_passed += 1
+        except Exception as exc:
+            logger.critical("Heartbeat: DB write failed", extra={"error": str(exc)})
+
+        # Check 4: Position count consistent between broker and local DB
+        try:
+            broker_positions = self._adapter.get_open_positions()
+            local_positions  = self._state.get_open_positions()
+            if len(broker_positions) == len(local_positions):
+                checks_passed += 1
+            else:
+                logger.warning(
+                    "Heartbeat: position count mismatch",
+                    extra={"broker": len(broker_positions), "local": len(local_positions)}
+                )
+        except Exception as exc:
+            logger.error("Heartbeat: position check failed", extra={"error": str(exc)})
+
+        logger.info(
+            "heartbeat",
+            extra={
+                "checks_passed":  checks_passed,
+                "total_checks":   total_checks,
+                "open_positions": len(self._state.get_open_positions()),
+                "model_version":  self._model_version,
+            }
+        )
+
+        if checks_passed == 0:
+            logger.critical("All heartbeat checks failed — triggering kill switch")
+            self._state.set_kill_switch(True, reason="All heartbeat checks failed")

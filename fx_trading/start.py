@@ -13,22 +13,26 @@
 #   4. Your demo forward test has passed (see README Section 10)
 # ============================================================
 
+import os
 import sys
+import shutil
+import tempfile
+import hashlib
 import logging
 import structlog
 from pathlib import Path
 
 # ── CONFIGURATION — fill these in ──────────────────────────────────────────
-MT5_LOGIN    = 5047402269          # Your MT5 account number
-MT5_PASSWORD = "T@Nj3aYk"  # Your MT5 password
-MT5_SERVER   = "MetaQuotes-Demo"  # Your broker's MT5 server name (find in MT5 terminal)
-BROKER_TZ    = "Etc/GMT-2"      # Your broker's server timezone — CHECK YOUR BROKER DOCS
-                                  # Common values: "Etc/GMT-2", "Etc/GMT-3", "US/Eastern"
+MT5_LOGIN    = 5047490486           # Your MT5 account number
+MT5_PASSWORD = "NsTiU*5n"          # Your MT5 password
+MT5_SERVER   = "MetaQuotes-Demo"    # Your broker's MT5 server name (find in MT5 terminal)
+BROKER_TZ    = "Etc/GMT-2"          # Your broker's server timezone — CHECK YOUR BROKER DOCS
+                                    # Common values: "Etc/GMT-2", "Etc/GMT-3", "US/Eastern"
 
-MODEL_ARTIFACT_DIR  = "artifacts/eurusd_5m_v001_20260305"   # path to your trained model
+MODEL_ARTIFACT_DIR    = "artifacts/eurusd_5m_v001_20260305"  # path to your trained model
 PIPELINE_ARTIFACT_DIR = "artifacts/pipeline_eurusd_5m_v001"  # path to your saved pipeline
-STATE_DB_PATH = "state/trading.db"
-LOG_DIR       = "logs"
+STATE_DB_PATH         = "state/trading.db"
+LOG_DIR               = "logs"
 # ──────────────────────────────────────────────────────────────────────────
 
 # Add project root to path
@@ -49,7 +53,6 @@ def setup_logging():
         logger_factory=structlog.PrintLoggerFactory(),
     )
 
-    # Also write to file
     file_handler = logging.FileHandler(f"{LOG_DIR}/live.jsonl")
     file_handler.setLevel(logging.DEBUG)
     logging.basicConfig(handlers=[file_handler, logging.StreamHandler()], level=logging.INFO)
@@ -67,7 +70,7 @@ def main():
     import unittest
     loader = unittest.TestLoader()
     suite  = loader.discover("tests")
-    runner = unittest.TextTestRunner(verbosity=0, stream=open("/dev/null", "w"))
+    runner = unittest.TextTestRunner(verbosity=0, stream=open(os.devnull, "w"))
     result = runner.run(suite)
 
     if not result.wasSuccessful():
@@ -75,9 +78,9 @@ def main():
             f"TEST SUITE FAILED: {len(result.failures)} failures, "
             f"{len(result.errors)} errors. DO NOT PROCEED."
         )
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("TESTS FAILED — run 'python -m unittest tests.test_all -v' to see details")
-        print("="*60)
+        print("=" * 60)
         sys.exit(1)
 
     logger.info(f"All {result.testsRun} tests passed.")
@@ -111,7 +114,7 @@ def main():
 
     # Safety check: warn loudly if this looks like a live account on first run
     if float(account.equity_usd) > 10_000 and not Path(STATE_DB_PATH).exists():
-        print("\n" + "!"*60)
+        print("\n" + "!" * 60)
         print("WARNING: Large account equity detected on first run.")
         print("Are you sure this is a DEMO account?")
         print("Type 'YES' to continue, anything else to abort:")
@@ -136,17 +139,20 @@ def main():
     pipeline = FeaturePipeline.load(PIPELINE_ARTIFACT_DIR)
     logger.info("Pipeline loaded.")
 
-    # Get pipeline SHA256 for reconciliation
-    import hashlib, pickle, tempfile, os
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pkl") as tmp:
-        tmp_path = tmp.name
-    pipeline.save(tmp_path.replace(".pkl", ""))
-    pipeline_sha256 = hashlib.sha256(Path(tmp_path).read_bytes()).hexdigest()
-    os.unlink(tmp_path)
+    # ── Get pipeline SHA256 for reconciliation ────────────────────
+    # FIX: pipeline.save() creates a directory, not a single file.
+    # Hash the actual pipeline.pkl inside that directory, not the temp file.
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        pipeline.save(os.path.join(tmp_dir, "pipeline"))
+        pkl_path = os.path.join(tmp_dir, "pipeline", "pipeline.pkl")
+        pipeline_sha256 = hashlib.sha256(Path(pkl_path).read_bytes()).hexdigest()
+    finally:
+        shutil.rmtree(tmp_dir)
 
-    # ── 5. Set up broker adapter idempotent submitter ─────────────
+    # ── 5. Set up idempotent order submitter ──────────────────────
     from broker.adapter import IdempotentOrderSubmitter
-    submitter = IdempotentOrderSubmitter(adapter=adapter, state_store=store)
+    submitter = IdempotentOrderSubmitter(adapter=adapter, state_store=store, model_version=manifest["version"])
 
     # ── 6. Set up risk engine ─────────────────────────────────────
     from risk.engine import RiskEngine, RiskParameters
@@ -171,9 +177,6 @@ def main():
         logger.warning(f"Unknown pair in manifest: {model_pair_str}. Defaulting to EUR/USD.")
         primary_pair = PairEnum.EURUSD
 
-    # Trade the pair the model was trained on.
-    # To add more pairs, train separate models and instantiate separate loops,
-    # OR add pairs here if your model is multi-pair (ensure pipeline handles all pairs).
     pairs = [primary_pair]
     logger.info(f"Trading pairs: {[p.value for p in pairs]}")
 
@@ -188,7 +191,7 @@ def main():
         model_sha256=manifest["sha256"],
         pipeline_sha256=pipeline_sha256,
         model_version=manifest["version"],
-        model_class=manifest["model_class"],  # FIX: pass model_class from manifest
+        model_class=manifest["model_class"],  # FIX: required by predict_proba
         risk_engine=risk_engine,
         state_store=store,
         pairs=pairs,
@@ -196,14 +199,6 @@ def main():
         timeframe_sec=300,      # 5-minute bars
         lookback_bars=110,      # rolling_window_bars + 10 bar buffer
     )
-
-    logger.info("Handing off to execution loop. Press Ctrl+C to stop cleanly.")
-    loop.run(
-        model_sha256=manifest["sha256"],
-        pipeline_sha256=pipeline_sha256,
-    )
-
-    logger.info("Execution loop exited cleanly.")
 
     logger.info("Handing off to execution loop. Press Ctrl+C to stop cleanly.")
     loop.run(

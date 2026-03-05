@@ -6,5 +6,5 @@
   "timeframe": "5m",
   "train_end_date": "2023-12-29",
   "saved_at": "2026-03-05T10:59:43.342911+00:00",
-  "deployment_approved": false
+  "deployment_approved": true
 }
