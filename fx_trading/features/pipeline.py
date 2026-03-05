@@ -269,7 +269,7 @@ class FeaturePipeline:
 
         # ---- Trend alignment (price vs longer MAs) ----
         ma50  = df["close_bid"].rolling(50,  min_periods=25).mean()
-        ma200 = df["close_bid"].rolling(200, min_periods=100).mean()
+        ma200 = df["close_bid"].rolling(200, min_periods=50).mean()
         out["price_vs_ma50"]  = ((df["close_bid"] - ma50)  / ma50).shift(1)
         out["price_vs_ma200"] = ((df["close_bid"] - ma200) / ma200).shift(1)
         out["ma50_vs_ma200"]  = ((ma50 - ma200) / ma200).shift(1)

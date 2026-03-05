@@ -19,13 +19,13 @@ import structlog
 from pathlib import Path
 
 # ── CONFIGURATION — fill these in ──────────────────────────────────────────
-MT5_LOGIN    = 12345678          # Your MT5 account number
-MT5_PASSWORD = "your_password"  # Your MT5 password
-MT5_SERVER   = "YourBroker-Demo"  # Your broker's MT5 server name (find in MT5 terminal)
+MT5_LOGIN    = 5047402269          # Your MT5 account number
+MT5_PASSWORD = "T@Nj3aYk"  # Your MT5 password
+MT5_SERVER   = "MetaQuotes-Demo"  # Your broker's MT5 server name (find in MT5 terminal)
 BROKER_TZ    = "Etc/GMT-2"      # Your broker's server timezone — CHECK YOUR BROKER DOCS
                                   # Common values: "Etc/GMT-2", "Etc/GMT-3", "US/Eastern"
 
-MODEL_ARTIFACT_DIR  = "artifacts/eurusd_5m_v001_20240115"   # path to your trained model
+MODEL_ARTIFACT_DIR  = "artifacts/eurusd_5m_v001_20260305"   # path to your trained model
 PIPELINE_ARTIFACT_DIR = "artifacts/pipeline_eurusd_5m_v001"  # path to your saved pipeline
 STATE_DB_PATH = "state/trading.db"
 LOG_DIR       = "logs"

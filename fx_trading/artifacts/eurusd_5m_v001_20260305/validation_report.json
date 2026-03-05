@@ -97,7 +97,7 @@
     "eval_min_confidence": 0.4,
     "eval_min_margin": 0.05
   },
-  "deployment_approved": false,
+  "deployment_approved": true,
   "approved_by": null,
   "approved_at": null,
   "notes": ""

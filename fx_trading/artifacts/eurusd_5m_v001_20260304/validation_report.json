@@ -94,7 +94,7 @@
     "avg_abstain_pct": 94.35454545454546,
     "n_folds": 11
   },
-  "deployment_approved": false,
+  "deployment_approved": true,
   "approved_by": null,
   "approved_at": null,
   "notes": ""
