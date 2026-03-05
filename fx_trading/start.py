@@ -180,6 +180,19 @@ def main():
     pairs = [primary_pair]
     logger.info(f"Trading pairs: {[p.value for p in pairs]}")
 
+    # ── 9. Start dashboard in background thread ───────────────────
+    import threading
+    def _run_dashboard():
+        try:
+            from monitoring.dashboard import app
+            app.run(host="0.0.0.0", port=5050, debug=False, use_reloader=False)
+        except Exception as e:
+            logger.warning(f"Dashboard failed to start: {e}")
+
+        dashboard_thread = threading.Thread(target=_run_dashboard, daemon=True)
+        dashboard_thread.start()
+        logger.info("Dashboard started at http://localhost:5050")
+        
     # ── 8. Start live loop ────────────────────────────────────────
     from execution.live_loop import LiveExecutionLoop
 

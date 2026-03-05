@@ -9,7 +9,7 @@
            const API_BASE = "http://localhost:5050";
    ============================================================= */
 
-const API_BASE = "http://localhost:5050";   // ← CHANGE THIS
+const API_BASE = "http://192.168.50.68:5050";   // ← CHANGE THIS
 
 const POLL_MS  = 5_000;   // refresh interval
 
