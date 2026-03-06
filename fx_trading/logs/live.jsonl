@@ -5262,3 +5262,396 @@ INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:03] "GET /api/orders HTTP/1.1" 20
 INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:03] "GET /api/status HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:03] "GET /api/decisions HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:03] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:08] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:13] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:18] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:24] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:29] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:34] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:39] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:44] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:49] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:54] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:35:59] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:04] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:09] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:14] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:19] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:36:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:37:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:38:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:39:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:40:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:02] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:03] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:08] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:13] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:18] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:24] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:29] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:34] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:39] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:44] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:49] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:54] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:41:59] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:04] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:09] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:14] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:19] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:42:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:43:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:44:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Mar/2026 19:45:36] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:KeyboardInterrupt received. Shutting down cleanly.
+INFO:__main__:Execution loop exited cleanly.
+INFO:__main__:============================================================
+INFO:__main__:FX Trading System — Starting up
+INFO:__main__:============================================================
+INFO:__main__:Running test suite...
+INFO:features.pipeline:FeaturePipeline fitted
+INFO:features.pipeline:FeaturePipeline fitted
+INFO:features.pipeline:FeaturePipeline saved
+INFO:features.pipeline:FeaturePipeline fitted
+INFO:features.pipeline:FeaturePipeline fitted
+INFO:features.pipeline:FeaturePipeline saved
+INFO:features.pipeline:FeaturePipeline loaded
+INFO:risk.engine:Trade denied
+INFO:risk.engine:Trade denied
+INFO:risk.engine:Trade denied
+INFO:risk.engine:Trade denied
+INFO:risk.engine:Trade denied
+INFO:risk.engine:Trade approved
+INFO:risk.engine:Trade approved
+INFO:state.store:StateStore initialized
+INFO:state.store:StateStore initialized
+INFO:state.store:StateStore initialized
+INFO:state.store:StateStore initialized
+CRITICAL:state.store:Kill switch state changed
+INFO:state.store:StateStore initialized
+INFO:state.store:StateStore initialized
+INFO:state.store:StateStore initialized
+INFO:research.walk_forward:Walk-forward folds generated
+INFO:research.walk_forward:Walk-forward folds generated
+INFO:research.walk_forward:Walk-forward folds generated
+INFO:research.walk_forward:Walk-forward folds generated
+INFO:__main__:All 48 tests passed.
+INFO:state.store:StateStore initialized
+INFO:__main__:State store initialized: state/trading.db
+INFO:broker.mt5_adapter:MT5 connected
+INFO:__main__:Connected to MT5 — Account: 27633912 | Equity: $10,000.00 | Balance: $10,000.00
+INFO:__main__:Loading model from artifacts/eurusd_5m_v001_20260305...
+INFO:research.model_training:Model loaded
+INFO:__main__:Model loaded: version=eurusd_5m_v001 | pair=EUR/USD | sha256=acabec73c4d2...
+INFO:__main__:Loading pipeline from artifacts/pipeline_eurusd_5m_v001...
+INFO:features.pipeline:FeaturePipeline loaded
+INFO:__main__:Pipeline loaded.
+INFO:features.pipeline:FeaturePipeline saved
+INFO:__main__:Pipeline sha256=5740e2269d48...
+INFO:__main__:Risk parameters: risk_per_trade=1.0% | max_daily_drawdown=3.0% | max_positions=3 | tp_atr_mult=1.5 | sl_atr_mult=1.0
+INFO:__main__:Trading pairs: ['EUR/USD']
+INFO:__main__:Dashboard started at http://192.168.50.68:5050
+INFO:__main__:Handing off to execution loop. Press Ctrl+C to stop cleanly.
+INFO:execution.live_loop:Starting live execution loop
+INFO:execution.reconciliation:Broker connected
+INFO:execution.reconciliation:P&L verified
+INFO:execution.reconciliation:Reconciliation completed successfully
+INFO:execution.live_loop:Reconciliation passed. Entering bar loop.
+WARNING:execution.live_loop:NaN in feature row — abstaining
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5050
+ * Running on http://192.168.50.68:5050
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:45:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:46:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:47:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:48:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:49:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:50:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:51:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:heartbeat
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/status HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/orders HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/positions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/pnl HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/decisions HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Mar/2026 10:52:35] "GET /api/signals HTTP/1.1" 200 -
+INFO:execution.live_loop:heartbeat
+INFO:execution.live_loop:KeyboardInterrupt received. Shutting down cleanly.
+INFO:__main__:Execution loop exited cleanly.

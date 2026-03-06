@@ -32,7 +32,7 @@ BAR_COMPLETION_TIMEOUT_SECONDS = 330   # 5m bar + 30s grace
 
 # MT5 timeframe constant — avoids importing MT5 at module level
 # If you change timeframe, update this AND timeframe_sec in __init__
-MT5_TIMEFRAME_M5 = 16388   # mt5.TIMEFRAME_M5 numeric value
+MT5_TIMEFRAME_M5 = 5   # mt5.TIMEFRAME_M5 numeric value
 
 
 class LiveExecutionLoop:

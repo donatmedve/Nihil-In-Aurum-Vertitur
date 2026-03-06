@@ -93,13 +93,13 @@ def fetch_recent_bars_mt5(
     for i, rate in enumerate(rates):
         # MT5 rate fields: time (int unix), open, high, low, close, tick_volume, spread, real_volume
         # 'time' is the bar OPEN time in broker server time (as Unix timestamp)
-        bar_open_broker = datetime.fromtimestamp(rate["time"])   # naive, broker tz
-        bar_open_utc = mt5_server_to_utc(bar_open_broker, broker_tz_str)
+        bar_open_utc = datetime.fromtimestamp(rate["time"], tz=timezone.utc) - timedelta(hours=2)
         bar_close_utc = bar_open_utc + timedelta(seconds=timeframe_sec)
 
         # A bar is complete if its close time is in the past.
         # The currently-open bar's close time is in the future.
-        is_complete = bar_close_utc <= now
+        import time as _time
+        is_complete = bar_close_utc.timestamp() <= _time.time()
 
         # Derive bid/ask from OHLC + spread.
         # MT5 rates are mid prices. Spread is in points (1 point = 0.00001 for 5-digit brokers).

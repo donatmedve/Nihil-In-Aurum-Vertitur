@@ -24,9 +24,9 @@ import structlog
 from pathlib import Path
 
 # ── CONFIGURATION — fill these in ──────────────────────────────────────────
-MT5_LOGIN             = 104006127
-MT5_PASSWORD          = "_iHb3pEl"
-MT5_SERVER            = "MetaQuotes-Demo"
+MT5_LOGIN             = 27633912 
+MT5_PASSWORD          = "Donat121donat!"
+MT5_SERVER            = "XM.COM-MT5"
 BROKER_TZ             = "Etc/GMT-2"
 
 MODEL_ARTIFACT_DIR    = "artifacts/eurusd_5m_v001_20260305"
