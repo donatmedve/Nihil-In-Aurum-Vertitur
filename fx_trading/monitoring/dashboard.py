@@ -34,6 +34,8 @@ DB_PATH  = BASE_DIR / "state" / "trading.db"
 LOGS_DIR = BASE_DIR / "logs"
 
 app = Flask(__name__)
+import logging
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 CORS(app)   # allow GitHub Pages (and localhost) to call this API
 
 

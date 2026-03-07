@@ -284,6 +284,8 @@ class FeaturePipeline:
         out["log_ret_24"]  = np.log(df["close_bid"] / df["close_bid"].shift(24)).shift(1)
         out["log_ret_48"]  = np.log(df["close_bid"] / df["close_bid"].shift(48)).shift(1)
         out["log_ret_288"] = np.log(df["close_bid"] / df["close_bid"].shift(288)).shift(1)  # ~1 day
+        out["log_ret_288"] = np.log(df["close_bid"] / df["close_bid"].shift(288)).shift(1)  # ~1 day
+        out["log_ret_288"] = out["log_ret_288"].fillna(0.0)
 
         # ---- Volume ----
         vol_ma = df["volume"].rolling(20, min_periods=10).mean().replace(0, np.nan)
